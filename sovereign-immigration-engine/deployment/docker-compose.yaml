@@ -1,0 +1,19 @@
+version: '3.8'
+services:
+  kyc-pipeline:
+    build:
+      context: ../services/kyc-pipeline
+    volumes:
+      - ./data:/app/data
+    environment:
+      - PIPA_COMPLIANT=true
+  policy-matching:
+    build:
+      context: ../services/policy-matching
+    depends_on:
+      - kyc-pipeline
+  compliance-monitor:
+    build:
+      context: ../services/compliance-dashboard
+    volumes:
+      - ./audit:/app/audit
