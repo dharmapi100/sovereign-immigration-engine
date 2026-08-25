@@ -1,0 +1,11 @@
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.DS_Store
+.venv/
+.env
+secure.key
+tests/data/*.png
+tests/data/*.jpg
+EOF
