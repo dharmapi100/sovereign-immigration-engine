@@ -4,13 +4,10 @@ sys.path.insert(0, '/Users/jtjtmoney/Projects/ksgc-sovereign-ai/sovereign-immigr
 sys.path.insert(0, '/Users/jtjtmoney/Projects/ksgc-sovereign-ai/sovereign-immigration-engine/services/policy-matching')
 
 from ingestion import KYCExtractor
-from matcher import PolicyMatcher
 
 class PipelineOrchestrator:
-    def __init__(self, key: bytes, rules: dict):
-        self.extractor = KYCExtractor(key)
-        self.matcher = PolicyMatcher(rules)
+    def __init__(self, key: bytes, visa_rules: dict, policy_rules: dict):
+        self.extractor = KYCExtractor(key, visa_rules, policy_rules)
 
     def run_pipeline(self, encrypted_doc: bytes, image_path: str) -> dict:
-        data = self.extractor.extract_pii(encrypted_doc, image_path)
-        return self.matcher.match_visa(data)
+        return self.extractor.extract_pii(encrypted_doc, image_path)

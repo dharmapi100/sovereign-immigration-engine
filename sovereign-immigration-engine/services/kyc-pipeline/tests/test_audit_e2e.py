@@ -14,7 +14,9 @@ class TestAuditE2E(unittest.TestCase):
         
         key = Fernet.generate_key()
         cipher = Fernet(key)
-        extractor = KYCExtractor(key)
+        visa_rules = {"id": True}
+        policy_rules = {"id": 1}
+        extractor = KYCExtractor(key, visa_rules, policy_rules)
         
         data = {"id": "talent_99", "visa": "D-10-2"}
         encrypted = cipher.encrypt(json.dumps(data).encode('utf-8'))

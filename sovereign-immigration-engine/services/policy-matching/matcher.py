@@ -8,7 +8,8 @@ class PolicyMatcher:
         # Matches PII against visa criteria (PIPA compliant)
         score = 0
         for rule, threshold in self.rules.items():
-            if applicant_data.get(rule, 0) >= threshold:
+            val = applicant_data.get(rule, 0)
+            if isinstance(val, (int, float)) and val >= threshold:
                 score += 1
         
         return {

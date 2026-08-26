@@ -11,8 +11,9 @@ class TestLedger(unittest.TestCase):
             f.write('{"id": "t1"}\n')
         
         ledger = AuditLedger(log_file)
-        ledger_hash = ledger.generate_ledger_hash()
-        self.assertTrue(len(ledger_hash) > 0)
+        ledger.record_transaction("T1", "SUCCESS")
+        with open(log_file, 'r') as f:
+            self.assertIn("T1:SUCCESS", f.read())
         os.remove(log_file)
 
 if __name__ == '__main__':
