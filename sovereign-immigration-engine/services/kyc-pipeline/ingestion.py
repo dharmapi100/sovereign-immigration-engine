@@ -20,6 +20,8 @@ from ledger import AuditLedger
 sys.path.insert(0, '/Users/jtjtmoney/Projects/ksgc-sovereign-ai/sovereign-immigration-engine/services/compliance-dashboard')
 from logger import AuditLogger
 
+from concurrent.futures import ThreadPoolExecutor
+
 class KYCExtractor:
     def __init__(self, key: bytes, visa_rules: dict, policy_rules: dict):
         self.cipher = Fernet(key)
@@ -31,17 +33,18 @@ class KYCExtractor:
         self.matcher = PolicyMatcher(policy_rules)
         self.orchestrator = FleetOrchestrator()
         self.ledger = AuditLedger()
+        self.executor = ThreadPoolExecutor(max_workers=4)
 
     def extract_pii(self, encrypted_doc: bytes, image_path: str = None) -> dict:
-        # PIPA compliant local PII extraction
         decrypted = self.cipher.decrypt(encrypted_doc)
         data = json.loads(decrypted.decode('utf-8'))
         if image_path:
             doc_type = self.classifier.predict(image_path)
             data['doc_type'] = doc_type
             if doc_type != 'contract':
-                cleaned_path = self.cleaner.preprocess(image_path)
-                data['ocr_text'] = self.ocr.extract_text(cleaned_path)
+                # parallel pre-processing/OCR
+                future = self.executor.submit(self._process_image, image_path)
+                data['ocr_text'] = future.result()
         
         validation = self.validator.validate_application(data)
         data['validation'] = validation
@@ -54,3 +57,7 @@ class KYCExtractor:
         self.ledger.record_transaction(data.get("id"), "KYC_COMPLETE" if validation['valid'] else "KYC_PENDING")
         
         return data
+
+    def _process_image(self, image_path):
+        cleaned = self.cleaner.preprocess(image_path)
+        return self.ocr.extract_text(cleaned)
