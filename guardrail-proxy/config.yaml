@@ -1,9 +1,0 @@
-policy:
-  mode: "strict" # options: strict, permissive
-  pii_detection: true
-  audit_level: "full"
-  block_violations: true
-
-# SME CDO Configuration for compliance profiling
-# Strict: blocks all potential PII egress
-# Permissive: flags and logs only (for dev environments)
