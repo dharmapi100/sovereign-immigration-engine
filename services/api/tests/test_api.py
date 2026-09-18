@@ -114,6 +114,27 @@ class TestAPI(unittest.TestCase):
         finally:
             api.API_TOKEN = ""
 
+    def test_compliance_report(self):
+        status, body = self._post("/v1/report", {
+            "applicant_id": "rep_1",
+            "applicant": {"id": "rep_1", "consent": True,
+                          "investment_capital_krw": 150_000_000,
+                          "business_plan": True, "incubator_letter": True,
+                          "ip_assets": ["patent"]},
+            "visa": "D-8-4"})
+        self.assertEqual(status, 200)
+        self.assertTrue(body["report_hash"])
+        self.assertTrue(body["audit_proof"]["intact"])
+        self.assertEqual(len(body["visa_decisions"]), 1)
+
+    def test_compliance_report_markdown(self):
+        status, body = self._post("/v1/report", {
+            "applicant_id": "rep_2",
+            "applicant": {"id": "rep_2", "consent": True},
+            "format": "markdown"})
+        self.assertEqual(status, 200)
+        self.assertIn("Compliance Report", body["markdown"])
+
 
 if __name__ == "__main__":
     unittest.main()

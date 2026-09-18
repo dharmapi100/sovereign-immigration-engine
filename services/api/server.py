@@ -37,7 +37,8 @@ for _p in ["services/audit-ledger", "services/visa-policy", "services/pipa-dsl",
            "services/kyc-pipeline", "services/kyc-pipeline/ocr",
            "services/kyc-pipeline/ocr/preprocessor", "services/doc-classifier",
            "services/visa-validation", "services/fleet-orchestrator",
-           "services/policy-matching", "services/compliance-dashboard"]:
+           "services/policy-matching", "services/compliance-dashboard",
+           "services/compliance-report"]:
     _full = os.path.join(_ROOT, _p)
     if _full not in sys.path:
         sys.path.insert(0, _full)
@@ -47,6 +48,7 @@ from kisa_client import KISATimestampClient  # noqa: E402
 from evidence import EvidenceService  # noqa: E402
 from compiler import PIPACompiler  # noqa: E402
 from engine import VisaPolicyEngine  # noqa: E402
+from generator import ReportGenerator  # noqa: E402
 
 API_TOKEN = os.getenv("API_TOKEN", "")
 DB_PATH = os.getenv("AUDIT_DB", os.path.join(_ROOT, "sovereign_audit.db"))
@@ -55,6 +57,7 @@ _ledger = AuditLedger(DB_PATH)
 _evidence = EvidenceService(_ledger, KISATimestampClient())
 _pipa = PIPACompiler()
 _visa = VisaPolicyEngine()
+_reports = ReportGenerator(_ledger)
 _lock = threading.Lock()
 
 
@@ -168,6 +171,36 @@ class Handler(BaseHTTPRequestHandler):
             except Exception as exc:  # noqa: BLE001 - surface as 500
                 return self._json(500, {"error": str(exc)})
             return self._json(200, result)
+
+        if path == "/v1/report":
+            applicant_id = body.get("applicant_id") or body.get("applicant", {}).get("id")
+            applicant = body.get("applicant", {})
+            if not applicant_id:
+                return self._json(400, {"error": "applicant_id required"})
+            visa = body.get("visa")
+            if visa:
+                try:
+                    vd = [_visa.evaluate(visa, applicant).to_dict()]
+                except ValueError:
+                    return self._json(400, {"error": f"unknown visa: {visa}"})
+            else:
+                vd = [r.to_dict() for r in _visa.evaluate_all(applicant)]
+            ctx = {
+                "consent": applicant.get("consent", False),
+                "output": applicant.get("ocr_text") or json.dumps(applicant, ensure_ascii=False),
+                "stored_at": applicant.get("stored_at"),
+                "retention_days": applicant.get("retention_days", 1825),
+            }
+            pd = [d.to_dict() for d in _pipa.enforce_plan(ctx)]
+            report = _reports.generate(applicant_id, vd, pd)
+            with _lock:
+                _evidence.record(applicant_id, "COMPLIANCE_REPORT", "api",
+                                 payload={"report_hash": report.report_hash},
+                                 purpose="evidence artifact")
+            if body.get("format") == "markdown":
+                return self._json(200, {"report": report.to_dict(),
+                                        "markdown": report.to_markdown()})
+            return self._json(200, report.to_dict())
 
         return self._json(404, {"error": "not found", "path": path})
 
