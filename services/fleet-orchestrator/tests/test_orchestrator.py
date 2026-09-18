@@ -1,5 +1,9 @@
 import sys
-sys.path.insert(0, '/Users/jtjtmoney/Projects/ksgc-sovereign-ai/sovereign-immigration-engine/services/fleet-orchestrator')
+import os
+_ROOT = os.path.dirname(os.path.abspath(__file__))
+while not os.path.isdir(os.path.join(_ROOT, 'services')) and os.path.dirname(_ROOT) != _ROOT:
+    _ROOT = os.path.dirname(_ROOT)
+sys.path.insert(0, os.path.join(_ROOT, 'services/fleet-orchestrator'))
 import unittest
 from orchestrator import FleetOrchestrator
 

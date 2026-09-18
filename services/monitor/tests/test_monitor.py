@@ -2,8 +2,11 @@ import unittest
 import os
 import json
 import sys
-sys.path.insert(0, '/Users/jtjtmoney/Projects/ksgc-sovereign-ai/sovereign-immigration-engine/services/compliance-dashboard')
-sys.path.insert(0, '/Users/jtjtmoney/Projects/ksgc-sovereign-ai/sovereign-immigration-engine/services/monitor')
+_ROOT = os.path.dirname(os.path.abspath(__file__))
+while not os.path.isdir(os.path.join(_ROOT, 'services')) and os.path.dirname(_ROOT) != _ROOT:
+    _ROOT = os.path.dirname(_ROOT)
+sys.path.insert(0, os.path.join(_ROOT, 'services/compliance-dashboard'))
+sys.path.insert(0, os.path.join(_ROOT, 'services/monitor'))
 from audit_monitor import AuditMonitor
 
 class TestAuditMonitor(unittest.TestCase):
@@ -18,5 +21,3 @@ class TestAuditMonitor(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
-EOF
-python3 /Users/jtjtmoney/Projects/ksgc-sovereign-ai/sovereign-immigration-engine/services/monitor/tests/test_monitor.py

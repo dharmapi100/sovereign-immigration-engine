@@ -1,11 +1,33 @@
+# Python
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
-.DS_Store
+*.egg-info/
+.pytest_cache/
 .venv/
+venv/
+
+# Secrets / local env
 .env
 secure.key
+
+# Runtime artifacts
+*.db
+access_audit.log
+sovereign_audit.db
+*_clean.png
+*_scrubbed.png
+
+# Test fixtures generated at runtime
 tests/data/*.png
 tests/data/*.jpg
-EOF
+dummy.png
+test_mask.png
+*_clean.png
+*_scrubbed.png
+
+# OS / IDE
+.DS_Store
+.idea/
+.vscode/

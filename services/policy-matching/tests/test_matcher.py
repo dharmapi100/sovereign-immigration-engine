@@ -1,7 +1,10 @@
 import unittest
 import sys
 import os
-sys.path.insert(0, '/Users/jtjtmoney/Projects/ksgc-sovereign-ai/sovereign-immigration-engine/services/policy-matching')
+_ROOT = os.path.dirname(os.path.abspath(__file__))
+while not os.path.isdir(os.path.join(_ROOT, 'services')) and os.path.dirname(_ROOT) != _ROOT:
+    _ROOT = os.path.dirname(_ROOT)
+sys.path.insert(0, os.path.join(_ROOT, 'services/policy-matching'))
 from matcher import PolicyMatcher
 
 class TestPolicyMatcher(unittest.TestCase):
@@ -14,5 +17,3 @@ class TestPolicyMatcher(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
-EOF
-python3 /Users/jtjtmoney/Projects/ksgc-sovereign-ai/sovereign-immigration-engine/services/policy-matching/tests/test_matcher.py
