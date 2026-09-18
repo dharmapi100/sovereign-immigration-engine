@@ -1,0 +1,34 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+# NOTE: services are run directly (python3 services/api/server.py) or shipped
+# as the air-gap bundle, not installed as a wheel. The service directories use
+# hyphens and flat sibling imports, which are not wheel-friendly by design —
+# the deployment model is a self-contained offline bundle, not PyPI.
+
+[project]
+name = "sovereign-immigration-engine"
+version = "0.2.0"
+description = "PIPA-compliant visa + KYC platform for Korean regulated environments (evidence-grade audit, rules-as-code policy, air-gap deployable)"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+keywords = ["pipa", "immigration", "kyc", "korea", "audit", "air-gap", "sovereign"]
+dependencies = [
+    "cryptography>=42",
+]
+
+[project.optional-dependencies]
+# OCR / document classification — heavy, optional, loaded lazily at runtime
+ocr = [
+    "easyocr>=1.7",
+    "opencv-python>=4.9",
+    "pillow>=10",
+    "numpy>=1.26",
+    "torch>=2.2",
+    "torchvision>=0.17",
+]
+dev = [
+    "pytest>=8",
+]

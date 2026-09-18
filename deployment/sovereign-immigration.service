@@ -1,0 +1,31 @@
+[Unit]
+Description=Sovereign Immigration Engine (PIPA-compliant visa + KYC API)
+Documentation=file:///opt/sovereign-immigration/README.md
+After=network.target
+Wants=network.target
+
+[Service]
+Type=simple
+User=sie
+Group=sie
+WorkingDirectory=__PREFIX__
+EnvironmentFile=__PREFIX__/.env
+ExecStart=/usr/bin/env python3 __PREFIX__/services/api/server.py
+Restart=on-failure
+RestartSec=3
+
+# --- Hardening: the service only needs its own directory ---
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=__PREFIX__
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+LockPersonality=true
+MemoryDenyWriteExecute=false
+
+[Install]
+WantedBy=multi-user.target

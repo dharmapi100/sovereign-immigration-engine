@@ -19,6 +19,9 @@ sovereign_audit.db
 *_clean.png
 *_scrubbed.png
 
+# Build output
+dist/
+
 # Test fixtures generated at runtime
 tests/data/*.png
 tests/data/*.jpg

@@ -1,207 +1,182 @@
 # Sovereign Immigration Engine
 
-**Automated, PIPA-compliant immigration processing platform** — End-to-end KYC, OCR, visa policy validation, and immutable audit logging for sovereign-native talent onboarding in Korea.
+**PIPA-compliant visa + KYC platform for Korean regulated environments** — evidence-grade audit trail, rules-as-code visa policy, and air-gap deployment.
 
-## Overview
+Built for the Korean market (KSGC / OASIS / D-8-4 pathway): a foreign-talent immigration and compliance engine that runs entirely on-premise, enforces PIPA by code, and produces a tamper-evident audit chain.
 
-The Sovereign Immigration Engine is a production-ready platform that automates the entire immigration workflow for foreign talent entering Korea — from document ingestion and OCR extraction to PIPA-compliant pseudonymization, visa policy validation, and court-admissible audit logging. Built for regulated environments (government, finance, healthcare) where data sovereignty and auditability are non-negotiable.
+---
 
-## Core Capabilities
+## What this actually does
 
-| Pipeline Stage | Component | Key Features |
-|----------------|-----------|--------------|
-| **Ingestion** | `services/kyc-pipeline/ingestion.py` | Multi-format document intake (PDF, images, scanned docs) |
-| **OCR & Classification** | `services/kyc-pipeline/ocr/` | Document classification, text extraction, layout analysis |
-| **PII Anonymization** | `services/kyc-pipeline/ocr/preprocessor/anonymizer/` | PII detection, pseudonymization, compliance scrubbing |
-| **Document Classification** | `services/doc-classifier/` | Visa type classification, document type routing |
-| **Policy Matching** | `services/policy-matching/` | Visa policy rule engine, eligibility validation |
-| **Visa Validation** | `services/visa-validation/` | Automated eligibility checks, quota tracking |
-| **Audit Ledger** | `services/audit-ledger/` | Immutable SHA-256 chained audit log, KISA timestamp integration |
-| **Compliance Dashboard** | `services/compliance-dashboard/` | Real-time compliance monitoring, audit trail queries |
-| **Pipeline Orchestration** | `pipeline_orchestrator.py` | End-to-end workflow coordination, error handling, retries |
+A single HTTP API (Python stdlib, no web framework) that:
 
-## Architecture
+1. **Evaluates visa eligibility** for D-8-4 (startup), E-7 (professional), E-9 (non-professional), D-10 (job-seeking) — real rule sets, each decision carrying a statutory citation.
+2. **Enforces PIPA as code** — Art. 21 (consent gate), Art. 22 (minimization/redaction), Art. 39 (retention).
+3. **Runs a KYC pipeline** on submitted documents — PIPA enforcement, optional OCR/classification, validation.
+4. **Writes an append-only hash-chained audit ledger** for every action, with optional KISA RFC-3161 timestamps.
 
-```
-┌─────────────┐    ┌─────────────┐    ┌─────────────┐    ┌─────────────┐
-│  Document   │───▶│   OCR &     │───▶│   PII       │───▶│   Policy    │
-│  Ingestion  │    │  Classification│    │ Anonymization│    │ Matching    │
-└─────────────┘    └─────────────┘    └─────────────┘    └─────────────┘
-                                                              │
-                                                              ▼
-┌─────────────┐    ┌─────────────┐    ┌─────────────┐    ┌─────────────┐
-│  Visa       │◀───│   Policy    │◀───│  Pipeline     │◀───│  Visa       │
-│  Validation │    │ Matching    │    │ Orchestrator  │    │ Validation  │
-└─────────────┘    └─────────────┘    └─────────────┘    └─────────────┘
-       │               │                │                │
-       ▼               ▼                ▼                ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                    AUDIT LEDGER (Immutable)                      │
-│  SHA-256 Chained Log  •  KISA Timestamp (RFC 3161)  •  PIPA    │
-└─────────────────────────────────────────────────────────────────┘
-```
+---
 
-## Key Features
+## Status (honest)
 
-### PIPA-Compliant by Design
-- **Article 21** — Consent management & lawful basis tracking
-- **Article 22** — Purpose limitation enforcement
-- **Article 39** — Data minimization & pseudonymization
-- **Article 39-2** — Automated pseudonymization pipeline
+| Component | State |
+|-----------|-------|
+| Visa policy engine (D-8-4/E-7/E-9/D-10) | ✅ Working, cited rules |
+| PIPA Article-as-Code DSL (Art. 21/22/39) | ✅ Working |
+| Hash-chained audit ledger + tamper detection | ✅ Working |
+| KISA RFC-3161 timestamp client | ✅ Working (tested against disabled client; live TSA needs a key) |
+| REST API (stdlib, zero deps) | ✅ Working |
+| Air-gap bundle + systemd + install | ✅ Working |
+| Docker image | ✅ Provided |
+| OCR / document classification | ⚠️ Optional — needs `easyocr`/`torch` + Korean-trained models (not bundled) |
+| Compliance dashboard / notifications / monitor | ⚠️ Basic scaffolds |
 
-### Audit-Grade Compliance
-- **SHA-256 chained audit log** — Tamper-evident, append-only
-- **KISA Timestamp Authority (RFC 3161)** — Legal timestamp verification
-- **Court-admissible evidence** — Cryptographic proof of every transaction
-- **PIPA Article-as-Code** — Legal articles mapped to executable policy
+**Not yet built:** live KISA integration test, trained Korean OCR/classifier models, compliance dashboard UI, multi-tenant isolation. The README previously claimed these — it no longer does.
 
-### Enterprise-Grade Pipeline
-- **Async pipeline orchestration** — Retries, dead-letter queues, idempotency
-- **OCR pipeline** — Classification → Extraction → Anonymization → Validation
-- **Policy-as-Code** — Visa rules as executable code, not documentation
-- **Multi-tenant isolation** — Namespace isolation, data segregation
+---
 
-## Quick Start
+## Quick start
 
-### Prerequisites
-- Python 3.11+
-- Docker & Docker Compose
-- Python 3.11+ with pip
-
-### Quick Start (Docker)
-```bash
-# Start full stack
-docker-compose -f deployment/docker-compose.yaml up -d
-
-# Verify health
-curl http://localhost:8000/health
-```
-
-### Local Development
-```bash
-# Install dependencies
-pip install -r services/kyc-pipeline/ocr/requirements.txt
-pip install -r services/doc-classifier/requirements.txt
-pip install -r services/fleet-orchestrator/requirements.txt
-
-# Run tests
-pytest tests/ -v
-
-# Run pipeline
-python -m pipeline_orchestrator
-```
-
-## Configuration
-
-All configuration via environment variables:
+### Run the API locally
 
 ```bash
-# Required
-export PIPA_HMAC_KEY="your-64-char-hex-key"
-export KISA_API_KEY="your-kisa-api-key"
-export DATABASE_URL="postgresql://user:pass@localhost/immigration"
-
-# Optional
-export KISA_TIMESTAMP_ENDPOINT="https://timestamp.kisa.or.kr"
-export LOG_LEVEL="INFO"
-export REDIS_URL="redis://localhost:6379"
+# no pip install needed for the core — stdlib + cryptography
+python3 services/api/server.py
+curl http://127.0.0.1:8787/health
 ```
+
+### Evaluate a visa
+
+```bash
+curl -X POST http://127.0.0.1:8787/v1/visa/evaluate \
+  -H "Content-Type: application/json" \
+  -d '{"visa":"D-8-4","applicant":{
+        "investment_capital_krw":150000000,
+        "business_plan":true,
+        "incubator_letter":true,
+        "ip_assets":["patent"]}}'
+```
+
+Response carries per-rule pass/fail with a citation (`출입국관리법 시행령 별표1` etc.).
+
+---
+
+## API
+
+| Method | Path | Purpose |
+|--------|------|---------|
+| GET | `/health` | liveness |
+| GET | `/ready` | readiness + ledger integrity |
+| GET | `/v1/pipa/manifest` | PIPA Article-as-Code manifest |
+| POST | `/v1/visa/evaluate` | `{visa, applicant}` → eligibility |
+| POST | `/v1/visa/evaluate-all` | `{applicant}` → all visa classes |
+| POST | `/v1/pipeline/ingest` | `{doc_b64, key_b64}` → run KYC pipeline |
+| GET | `/v1/audit` | recent audit entries |
+| GET | `/v1/audit/verify` | chain integrity |
+| GET | `/v1/audit/{hash}` | single audit record |
+
+Auth: set `API_TOKEN` to require `Authorization: Bearer <token>` on `/v1/*`.
+
+---
+
+## PIPA mapping
+
+| Article | Enforcement |
+|---------|-------------|
+| **Art. 21** 동의 (Consent) | blocks processing when consent metadata is absent |
+| **Art. 22** 최소수집 (Minimization) | redacts RRN / passport / phone / account on output |
+| **Art. 39** 파기 (Retention) | blocks access past the retention window |
+
+The manifest is exposed at `/v1/pipa/manifest` so an auditor can map code → statute.
+
+---
+
+## Audit ledger
+
+Every pipeline action appends `hash_n = SHA256(payload_hash || hash_{n-1})`.
+Raw payloads are never stored — only hashes. Integrity is checkable:
+
+```python
+ledger.verify_chain()   # recomputes the full chain
+ledger.get(chain_hash)  # retrieve a single record
+```
+
+When `KISA_ENABLED=true`, each new hash requests an RFC-3161 timestamp from
+the TSA and attaches it (fail-soft: a slow TSA never blocks the ledger).
+
+---
+
+## Deployment
+
+### Air-gap (offline, recommended for government/finance/defense)
+
+```bash
+cd deployment
+./build_bundle.sh 0.2.0        # -> dist/sovereign-immigration-0.2.0.tar.gz (+ .sha256)
+```
+
+Transfer both files across the gap, verify the archive checksum, extract, then:
+
+```bash
+./install.sh                    # installs to /opt/sovereign-immigration (verifies every file)
+./install.sh --with-service     # + hardened systemd unit (as root)
+```
+
+### Container
+
+```bash
+docker build -t sovereign-immigration:0.2 .
+docker run -p 8787:8787 -v /var/lib/sie:/data sovereign-immigration:0.2
+```
+
+See [deployment/README.md](deployment/README.md) for the full runbook.
+
+---
 
 ## Testing
 
 ```bash
-# Run all tests
-pytest tests/ -v
-
-# Run specific test suites
-pytest tests/test_pipeline.py -v
-pytest tests/fuzzer/ -v
-pytest services/kyc-pipeline/tests/ -v
+# run the whole suite (stdlib unittest — no pytest needed)
+for f in $(find . -name "test_*.py"); do python3 "$f"; done
 ```
 
-## Deployment
-
-### Docker Compose (Production)
-```yaml
-# deployment/docker-compose.yaml
-services:
-  api:
-    build: .
-    ports: ["8000:8000"]
-    environment:
-      - PIPA_HMAC_KEY=${PIPA_HMAC_KEY}
-      - KISA_API_KEY=${KISA_API_KEY}
-    depends_on: [db, redis]
-
-  worker:
-    build: .
-    command: python -m pipeline_orchestrator
-    depends_on: [redis, db]
-
-  db:
-    image: postgres:16
-    volumes: [postgres_data:/var/lib/postgresql/data]
-
-  redis:
-    image: redis:7-alpine
-```
-
-### Air-Gap Deployment
-```bash
-# Build air-gap bundle
-./install.sh --airgap --prefix=/opt/sovereign-immigration
-
-# On air-gapped host
-cd /opt/sovereign-immigration
-./install.sh --config=/etc/sovereign-immigration/config.yaml
-systemctl start sovereign-immigration
-```
-
-## Security & Compliance
-
-| Standard | Implementation |
-|----------|----------------|
-| **PIPA Articles 21/22/39** | Automated enforcement via policy engine |
-| **KISA Timestamp (RFC 3161)** | Optional timestamp authority integration |
-| **SHA-256 Chained Audit Log** | Tamper-evident, append-only ledger |
-| **Air-Gap Compatible** | No external dependencies at runtime |
-| **Data Minimization** | Automated pseudonymization pipeline |
-| **Consent Management** | Article 21 consent tracking & revocation |
-
-## Project Structure
-
-```
-sovereign-immigration-engine/
-├── deployment/
-│   └── docker-compose.yaml
-├── provisioning_spec.md
-├── services/
-│   ├── audit-ledger/           # Immutable audit ledger
-│   ├── compliance-dashboard/   # Compliance monitoring UI
-│   ├── doc-classifier/         # Document type classification
-│   ├── fleet-orchestrator/     # Robot fleet coordination (shared)
-│   ├── kyc-pipeline/           # Core KYC/OCR pipeline
-│   ├── monitor/                # Audit monitoring & alerting
-│   ├── notification-gateway/   # Multi-channel notifications
-│   ├── policy-matching/        # Visa policy rule engine
-│   ├── visa-validation/        # Visa eligibility & quota
-│   └── pipeline_orchestrator.py
-├── tests/
-│   ├── data/                   # Test fixtures
-│   ├── fuzzer/                 # Fault injection & stress tests
-│   └── test_*.py               # Unit & integration tests
-├── deployment/
-│   └── docker-compose.yaml
-├── provisioning_spec.md
-├── .gitignore
-├── README.md
-└── Pitch_Deck.md
-```
-
-## License
-
-MIT License — see [LICENSE](LICENSE) for details.
+Coverage: ledger (incl. tamper detection), PIPA DSL, visa engine, API
+integration, pipeline end-to-end.
 
 ---
 
-**Sovereign Immigration Engine** — Automating compliant immigration at scale. Built for sovereign data environments where auditability and compliance are non-negotiable.
+## Project structure
+
+```
+sovereign-immigration-engine/
+├── Dockerfile
+├── deployment/                 # air-gap bundle, installer, systemd, runbook
+│   ├── build_bundle.sh
+│   ├── install.sh
+│   ├── sovereign-immigration.service
+│   └── README.md
+├── services/
+│   ├── api/                    # stdlib HTTP API
+│   ├── audit-ledger/           # hash-chained ledger, KISA client, evidence service
+│   ├── pipa-dsl/               # PIPA Article-as-Code compiler
+│   ├── visa-policy/            # D-8-4/E-7/E-9/D-10 rules-as-code engine
+│   ├── kyc-pipeline/           # ingestion + optional OCR/preprocess
+│   ├── doc-classifier/         # optional (torch) document classifier
+│   ├── policy-matching/        # rule scoring
+│   ├── visa-validation/        # field validation
+│   ├── monitor/                # audit monitoring
+│   ├── notification-gateway/   # notifications
+│   ├── compliance-dashboard/   # audit logging helper
+│   └── fleet-orchestrator/     # shared robot-fleet adapter
+└── tests/
+```
+
+---
+
+## License
+
+MIT — see [LICENSE](LICENSE).
+
+---
+
+**Built for sovereign data environments where auditability and PIPA compliance are non-negotiable.**

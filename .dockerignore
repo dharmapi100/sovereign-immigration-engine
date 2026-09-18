@@ -1,0 +1,12 @@
+# Build context exclusions — keep the image lean and secret-free
+.git
+.gitignore
+dist/
+**/__pycache__/
+**/*.pyc
+*.db
+*.log
+.env
+secure.key
+*.md
+!README.md
