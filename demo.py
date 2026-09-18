@@ -129,6 +129,19 @@ def main():
     v = get("/v1/audit/verify")
     print(f"  after restore:        intact={v['intact']}  (expected True)")
 
+    hr("7. Compliance report (self-hashing evidence artifact)")
+    rep = post("/v1/report", {
+        "applicant_id": "founder_kim", "visa": "D-8-4", "format": "markdown",
+        "applicant": {"id": "founder_kim", "consent": True,
+                      "investment_capital_krw": 150_000_000,
+                      "business_plan": True, "incubator_letter": True,
+                      "ip_assets": ["PIPA-Article-Compiler"]}})
+    print(f"  report SHA-256: {rep['report']['report_hash']}")
+    print(f"  audit-chain intact in report: {rep['report']['audit_proof']['intact']}")
+    print("  (first lines of markdown artifact:)")
+    for line in rep["markdown"].splitlines()[:6]:
+        print("    " + line)
+
     httpd.shutdown()
     hr("DEMO COMPLETE")
 

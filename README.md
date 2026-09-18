@@ -24,8 +24,9 @@ A single HTTP API (Python stdlib, no web framework) that:
 | Visa policy engine (D-8-4/E-7/E-9/D-10) | ✅ Working, cited rules |
 | PIPA Article-as-Code DSL (Art. 21/22/39) | ✅ Working |
 | Hash-chained audit ledger + tamper detection | ✅ Working |
-| KISA RFC-3161 timestamp client | ✅ Working (tested against disabled client; live TSA needs a key) |
+| KISA RFC-3161 timestamp client | ✅ Working (verified against mock TSA; live KISA endpoint needs a key) |
 | REST API (stdlib, zero deps) | ✅ Working |
+| Compliance report generator (self-hashing evidence artifact) | ✅ Working |
 | Air-gap bundle + systemd + install | ✅ Working |
 | Docker image | ✅ Provided |
 | OCR / document classification | ⚠️ Optional — needs `easyocr`/`torch` + Korean-trained models (not bundled) |
@@ -80,6 +81,7 @@ Response carries per-rule pass/fail with a citation (`출입국관리법 시행�
 | POST | `/v1/visa/evaluate` | `{visa, applicant}` → eligibility |
 | POST | `/v1/visa/evaluate-all` | `{applicant}` → all visa classes |
 | POST | `/v1/pipeline/ingest` | `{doc_b64, key_b64}` → run KYC pipeline |
+| POST | `/v1/report` | `{applicant_id, applicant, visa?}` → self-hashing compliance report |
 | GET | `/v1/audit` | recent audit entries |
 | GET | `/v1/audit/verify` | chain integrity |
 | GET | `/v1/audit/{hash}` | single audit record |
@@ -169,6 +171,7 @@ sovereign-immigration-engine/
 │   ├── audit-ledger/           # hash-chained ledger, KISA client, evidence service
 │   ├── pipa-dsl/               # PIPA Article-as-Code compiler
 │   ├── visa-policy/            # D-8-4/E-7/E-9/D-10 rules-as-code engine
+│   ├── compliance-report/      # self-hashing evidence-artifact generator
 │   ├── kyc-pipeline/           # ingestion + optional OCR/preprocess
 │   ├── doc-classifier/         # optional (torch) document classifier
 │   ├── policy-matching/        # rule scoring
