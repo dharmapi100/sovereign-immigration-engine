@@ -45,6 +45,15 @@ python3 services/api/server.py
 curl http://127.0.0.1:8787/health
 ```
 
+### Full end-to-end demo
+
+```bash
+python3 demo.py
+```
+
+Walks through: PIPA manifest → D-8-4/E-7 eligibility (with citations) →
+document ingest + PII redaction → audit chain verification → tamper detection.
+
 ### Evaluate a visa
 
 ```bash
