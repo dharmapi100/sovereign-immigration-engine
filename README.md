@@ -4,6 +4,8 @@
 
 Built for the Korean market (KSGC / OASIS / D-8-4 pathway): a foreign-talent immigration and compliance engine that runs entirely on-premise, enforces PIPA by code, and produces a tamper-evident audit chain.
 
+**Docs:** [Architecture](docs/ARCHITECTURE.md) · [Compliance mapping](docs/COMPLIANCE.md) · [Deployment](deployment/README.md)
+
 ---
 
 ## What this actually does
